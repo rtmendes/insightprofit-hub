@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsightProfit Project Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1117;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#0f1117}
+::-webkit-scrollbar-thumb{background:#2d3748;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#4a5568}
+.tab-btn{padding:7px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;border:none;background:none}
+.tab-btn.active{background:#6366f1;color:#fff}
+.tab-btn:not(.active){color:#94a3b8}
+.tab-btn:not(.active):hover{background:#1e2130;color:#f1f5f9}
+.kanban-col{flex:1;min-width:220px;background:#1a1d2e;border-radius:8px;padding:12px;border:2px solid transparent;transition:border-color .15s}
+.kanban-col.drag-over{border-color:#6366f1;background:#1e2130}
+.kanban-card{background:#1e2130;border:1px solid #2d3748;border-radius:8px;padding:12px;margin-bottom:8px;cursor:grab;transition:transform .1s,box-shadow .1s,border-color .15s}
+.kanban-card:hover{border-color:#6366f1;box-shadow:0 0 0 1px #6366f122}
+.kanban-card.dragging{opacity:.4;transform:rotate(2deg);cursor:grabbing}
+.progress-bar{height:6px;background:#2d3748;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#818cf8);border-radius:3px;transition:width .5s ease}
+.sdot-green{width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 5px #10b98166;flex-shrink:0}
+.sdot-yellow{width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;box-shadow:0 0 5px #f59e0b66;flex-shrink:0}
+.sdot-red{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;box-shadow:0 0 5px #ef444466;flex-shrink:0}
+.sidebar-project{padding:9px 10px;border-radius:7px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:8px;margin-bottom:3px;border-left:3px solid transparent}
+.sidebar-project:hover{background:#252b3b}
+.sidebar-project.active{background:#1e2130;border-left-color:#6366f1}
+.agent-ping{width:7px;height:7px;border-radius:50%;background:#10b981;animation:apulse 2s infinite}
+@keyframes apulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kb-item{background:#1e2130;border:1px solid #2d3748;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.kb-header{padding:11px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.kb-header:hover{background:#252b3b}
+.kb-body{padding:12px 14px;border-top:1px solid #2d3748;font-size:12px;color:#94a3b8;max-height:240px;overflow-y:auto;display:none;white-space:pre-wrap;line-height:1.6}
+.kb-body.open{display:block}
+input,select,textarea{background:#1a1d2e;border:1px solid #2d3748;border-radius:6px;color:#f1f5f9;padding:7px 11px;font-size:13px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:#6366f1;box-shadow:0 0 0 2px #6366f122}
+button{cursor:pointer;border:none;outline:none}
+.btn-p{background:#6366f1;color:#fff;padding:7px 15px;border-radius:6px;font-size:13px;font-weight:500;transition:background .15s}
+.btn-p:hover{background:#4f46e5}
+.btn-g{background:transparent;color:#94a3b8;padding:6px 12px;border-radius:6px;font-size:13px;border:1px solid #2d3748;transition:all .15s}
+.btn-g:hover{background:#2d3748;color:#f1f5f9}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1d2e}
+.checklist-item:last-child{border-bottom:none}
+.rev-card{background:#1e2130;border:1px solid #2d3748;border-radius:8px;padding:16px;margin-bottom:14px}
+.agent-item{padding:12px 14px;border-left:2px solid #6366f1;margin-bottom:8px;background:#1a1d2e;border-radius:0 8px 8px 0}
+.deploy-card{background:#1e2130;border:1px solid #2d3748;border-radius:8px;padding:16px;margin-bottom:12px}
+.modal-bg{position:fixed;inset:0;background:#00000099;z-index:200;display:none;align-items:center;justify-content:center}
+.modal-box{background:#1e2130;border-radius:12px;padding:24px;border:1px solid #2d3748}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ TOP BAR ═══════════════════════ -->
+<div style="height:52px;background:#1e2130;border-bottom:1px solid #2d3748;display:flex;align-items:center;padding:0 18px;gap:14px;position:fixed;top:0;left:0;right:0;z-index:100;">
+  <div style="display:flex;align-items:center;gap:8px;min-width:190px;">
+    <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🚀</div>
+    <span style="font-weight:700;font-size:15px;">InsightProfit</span>
+    <span style="font-size:10px;color:#94a3b8;background:#2d3748;padding:2px 6px;border-radius:4px;letter-spacing:.5px;">HUB</span>
+  </div>
+  <div style="flex:1;max-width:380px;position:relative;">
+    <input type="text" id="global-search" placeholder="⌕  Search projects, tasks, docs…" style="font-size:12px;background:#0f1117;padding-left:10px;" oninput="handleSearch(this.value)">
+  </div>
+  <div style="display:flex;align-items:center;gap:18px;margin-left:auto;">
+    <div style="display:flex;flex-direction:column;align-items:flex-end;">
+      <span style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;">Daily Rev</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span id="daily-rev" style="font-size:14px;font-weight:700;color:#94a3b8;font-variant-numeric:tabular-nums;">$—</span>
+        <span style="font-size:10px;color:#4a5568;">/ $33,333</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;background:#0f1117;padding:5px 11px;border-radius:7px;">
+      <div class="agent-ping"></div>
+      <span id="agent-status" style="font-size:11px;color:#94a3b8;">Loading…</span>
+    </div>
+    <button onclick="toggleNotif()" style="background:none;position:relative;padding:5px;line-height:1;">
+      <span style="font-size:19px;">🔔</span>
+      <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:9px;width:14px;height:14px;border-radius:50%;display:none;align-items:center;justify-content:center;">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS PANEL -->
+<div id="notif-panel" style="position:fixed;top:52px;right:0;width:300px;background:#1e2130;border-left:1px solid #2d3748;height:calc(100vh - 52px);z-index:90;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:14px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <span style="font-size:13px;font-weight:600;">Agent Alerts</span>
+    <button onclick="toggleNotif()" style="background:none;color:#94a3b8;font-size:18px;line-height:1;">×</button>
+  </div>
+  <div id="notif-list"></div>
+</div>
+
+<!-- ═══════════════════════ LAYOUT ═══════════════════════ -->
+<div style="display:flex;height:calc(100vh - 52px);margin-top:52px;">
+
+<!-- LEFT SIDEBAR -->
+<div id="sidebar" style="width:252px;min-width:252px;background:#1e2130;border-right:1px solid #2d3748;overflow-y:auto;padding:10px;display:flex;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;">Projects</span>
+    <button onclick="showNewProject()" class="btn-p" style="font-size:11px;padding:4px 9px;">+ New</button>
+  </div>
+  <input type="text" id="sb-search" placeholder="Filter…" style="margin-bottom:8px;font-size:12px;" oninput="filterProjects(this.value)">
+  <div id="project-list" style="flex:1;">
+    <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">
+      <div style="font-size:22px;margin-bottom:6px;display:inline-block;">⏳</div><br>Loading projects…
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PANEL -->
+<div id="main-panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:#0f1117;">
+
+  <!-- WELCOME STATE -->
+  <div id="welcome-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:40px;">
+    <div style="font-size:56px;">🚀</div>
+    <h2 style="font-size:22px;font-weight:700;">InsightProfit Project Hub</h2>
+    <p style="color:#94a3b8;font-size:13px;max-width:380px;line-height:1.6;">Select a project to view its unified workspace — tasks, KB docs, deployments, revenue & AI agents, all in one place. No more tab-switching.</p>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button onclick="loadProjects()" class="btn-p">↻ Refresh</button>
+      <button onclick="showNewProject()" class="btn-g">+ New Project</button>
+    </div>
+  </div>
+
+  <!-- PROJECT PANEL -->
+  <div id="project-panel" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
+
+    <!-- PROJECT HEADER -->
+    <div style="padding:13px 18px;border-bottom:1px solid #2d3748;background:#1a1d2e;display:flex;align-items:center;gap:10px;">
+      <div id="proj-sdot" class="sdot-green"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <h2 id="proj-title" style="font-size:17px;font-weight:700;">Project</h2>
+          <span id="proj-tier" style="font-size:10px;background:#6366f122;color:#818cf8;padding:2px 7px;border-radius:4px;font-weight:700;">P1</span>
+          <span id="proj-dept" style="font-size:10px;background:#10b98122;color:#10b981;padding:2px 7px;border-radius:4px;">Dept</span>
+        </div>
+        <p id="proj-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
+      </div>
+      <button onclick="refreshCurrent()" style="background:#2d3748;color:#94a3b8;padding:5px 11px;border-radius:6px;font-size:11px;flex-shrink:0;">↻</button>
+    </div>
+
+    <!-- TABS -->
+    <div style="padding:6px 18px;border-bottom:1px solid #2d3748;background:#1a1d2e;display:flex;gap:3px;overflow-x:auto;">
+      <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview',this)">📊 Overview</button>
+      <button class="tab-btn" data-tab="checklist" onclick="switchTab('checklist',this)">✅ Checklist</button>
+      <button class="tab-btn" data-tab="kb" onclick="switchTab('kb',this)">📚 KB</button>
+      <button class="tab-btn" data-tab="tasks" onclick="switchTab('tasks',this)">🗂 Tasks</button>
+      <button class="tab-btn" data-tab="deployments" onclick="switchTab('deployments',this)">▲ Deploy</button>
+      <button class="tab-btn" data-tab="revenue" onclick="switchTab('revenue',this)">💰 Revenue</button>
+      <button class="tab-btn" data-tab="agent-feed" onclick="switchTab('agent-feed',this)">🤖 AI Feed</button>
+    </div>
+
+    <!-- TAB CONTENT -->
+    <div id="tab-content" style="flex:1;overflow-y:auto;padding:18px;"></div>
+
+    <!-- AGENTIC COMMENT BOX -->
+    <div style="border-top:1px solid #2d3748;padding:12px 18px;background:#1a1d2e;">
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
+            <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">Route to:</span>
+            <select id="comment-route" style="width:auto;font-size:11px;padding:3px 7px;">
+              <option value="cos">CoS</option>
+              <option value="tech_agent">Tech Agent</option>
+              <option value="marketing_agent">Marketing Agent</option>
+              <option value="clickup_task">ClickUp Task</option>
+              <option value="kb_entry">KB Entry</option>
+              <option value="ghl_action">GHL Action</option>
+            </select>
+            <span id="cmt-count" style="font-size:10px;color:#4a5568;margin-left:auto;">0/500</span>
+          </div>
+          <textarea id="comment-input" rows="2" placeholder="Add a comment, action, or instruction… (Enter to send)" style="resize:none;font-size:12px;" maxlength="500" oninput="document.getElementById('cmt-count').textContent=this.value.length+'/500'" onkeydown="cmtKey(event)"></textarea>
+        </div>
+        <button onclick="submitComment()" class="btn-p" style="height:58px;padding:0 16px;white-space:nowrap;font-size:12px;">Send →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div id="modal-new" class="modal-bg" onclick="if(event.target===this)closeModal('modal-new')">
+  <div class="modal-box" style="width:460px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="font-size:15px;font-weight:700;">New Project</h3>
+      <button onclick="closeModal('modal-new')" style="background:none;color:#94a3b8;font-size:22px;line-height:1;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px;">Project Name *</label>
+        <input type="text" id="np-name" placeholder="e.g., Enterprise AI Platform"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px;">Department</label>
+          <select id="np-dept"><option value="tech">Tech</option><option value="marketing">Marketing</option><option value="sales">Sales</option><option value="ops">Operations</option><option value="product">Product</option></select></div>
+        <div><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px;">Priority Tier</label>
+          <select id="np-tier"><option value="P0">P0 — Critical</option><option value="P1">P1 — High</option><option value="P2">P2 — Normal</option></select></div>
+      </div>
+      <div><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px;">Description</label>
+        <textarea id="np-desc" rows="2" placeholder="Brief description…"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModal('modal-new')" class="btn-g">Cancel</button>
+        <button onclick="createProject()" class="btn-p">Create →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toasts" style="position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;"></div>
+
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════
+const SB_URL  = 'https://supabase.insightprofit.live';
+const SB_ANON = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzY2ODcxMjQ0LCJleHAiOjIwODIyMzEyNDR9.qtJF1pWQQr-SGHVYLv0wP4hMiamqfjrNsfsnBm-c2hI';
+const SB_SVC  = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NjY4NzEyNDQsImV4cCI6MjA4MjIzMTI0NH0._MTLkX32ncAWUnnYkEPLx4L74xllYllJsjgdylfhLaQ';
+const UID     = '893ac9b3-d3f8-4809-ab8e-0e2ad12bc0d0';
+
+let currentProjId = null, currentTab = 'overview', allProjects = [], draggedId = null, checkState = {};
+
+// ════════════════════════════════════════════
+// SUPABASE HELPER
+// ════════════════════════════════════════════
+async function sb(method, table, qs='', body=null, svc=false){
+  const key = svc ? SB_SVC : SB_ANON;
+  const url = `${SB_URL}/rest/v1/${table}${qs?'?'+qs:''}`;
+  try{
+    const r = await fetch(url,{method,headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},body:body?JSON.stringify(body):null});
+    if(!r.ok){console.warn('SB',method,table,r.status,await r.text().catch(()=>'')); return null;}
+    const txt = await r.text(); return txt ? JSON.parse(txt) : null;
+  }catch(e){console.warn('SB err:',e.message); return null;}
+}
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function toast(msg, type='success'){
+  const c={success:{bg:'#10b981',ic:'✅'},error:{bg:'#ef4444',ic:'❌'},warning:{bg:'#f59e0b',ic:'⚠️'},info:{bg:'#6366f1',ic:'ℹ️'}};
+  const {bg,ic}=c[type]||c.info;
+  const el=document.createElement('div');
+  el.style.cssText=`background:${bg};color:#fff;padding:10px 15px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:7px;min-width:180px;max-width:300px;box-shadow:0 6px 20px #00000055;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;`;
+  el.innerHTML=`<span>${ic}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='1';el.style.transform='translateY(0)'},10);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(()=>el.remove(),220)},3800);
+}
+
+// ════════════════════════════════════════════
+// PROJECTS — LOAD & RENDER
+// ════════════════════════════════════════════
+async function loadProjects(){
+  document.getElementById('project-list').innerHTML='<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px;"><span style="display:inline-block;animation:spin 1s linear infinite;font-size:18px;">⟳</span><br>Loading…</div>';
+  let raw = await sb('GET','knowledge_items','select=id,title,content,metadata,source,created_at,updated_at&source=in.(enterprise_org,mega_course,project_registry)&order=updated_at.desc&limit=60');
+  if(!raw||!raw.length) raw = await sb('GET','knowledge_items','select=id,title,content,metadata,source,created_at,updated_at&order=updated_at.desc&limit=40');
+  if(!raw||!raw.length){raw=demoProjects();toast('Using demo data — Supabase pending','warning');}
+  allProjects = raw.map(normProject);
+  renderProjList(allProjects);
+  tickerUpdate(); agentUpdate(); notifUpdate();
+}
+
+function normProject(r){
+  const m=r.metadata||{};
+  return{id:r.id,title:r.title||m.name||'Untitled',status:m.status||'active',tier:m.tier||m.priority||'P1',dept:m.department||m.dept||r.source||'General',desc:m.description||r.content?.substring(0,120)||'',agent:m.agent_assigned||m.agent||'CoS',revStage:m.revenue_stage||'Pre-launch',liveUrl:m.live_url||m.url||'',repo:m.github_repo||m.repo||'',updated:r.updated_at||r.created_at,source:r.source,raw:r};
+}
+
+function demoProjects(){
+  return[
+    {id:'dp1',title:'Enterprise AI Platform',content:'B2B SaaS for enterprise AI automation',source:'enterprise_org',metadata:{status:'active',tier:'P0',department:'Tech',agent_assigned:'Tech Agent',revenue_stage:'Beta',live_url:'https://app.insightprofit.live',github_repo:'rtmendes/insightprofit-hub'},created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+    {id:'dp2',title:'Mega Course Bundle',content:'10x productivity with AI tools training',source:'mega_course',metadata:{status:'active',tier:'P0',department:'Marketing',agent_assigned:'Marketing Agent',revenue_stage:'Live',live_url:'https://course.insightprofit.live'},created_at:new Date().toISOString(),updated_at:new Date(Date.now()-3.6e6).toISOString()},
+    {id:'dp3',title:'GHL CRM Automation',content:'GoHighLevel AI email sequences',source:'project_registry',metadata:{status:'paused',tier:'P1',department:'Sales',agent_assigned:'Marketing Agent',revenue_stage:'Setup'},created_at:new Date().toISOString(),updated_at:new Date(Date.now()-7.2e6).toISOString()},
+    {id:'dp4',title:'InsightProfit Hub',content:'Unified project workspace — this app',source:'project_registry',metadata:{status:'active',tier:'P0',department:'Tech',agent_assigned:'Tech Agent',revenue_stage:'Live',live_url:window.location.href,github_repo:'rtmendes/insightprofit-hub'},created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+    {id:'dp5',title:'Supabase Data Layer',content:'Database schema & RLS policy configuration',source:'project_registry',metadata:{status:'active',tier:'P1',department:'Tech',agent_assigned:'Tech Agent',revenue_stage:'Setup'},created_at:new Date().toISOString(),updated_at:new Date(Date.now()-1.8e5).toISOString()},
+  ];
+}
+
+const STATUS_DOT={active:'sdot-green',paused:'sdot-yellow',inactive:'sdot-red',error:'sdot-red',complete:'sdot-green'};
+const TIER_CLR={P0:'#ef4444',P1:'#f59e0b',P2:'#6366f1'};
+
+function renderProjList(list){
+  const el=document.getElementById('project-list');
+  if(!list?.length){el.innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No projects.<br><button onclick="showNewProject()" class="btn-p" style="margin-top:8px;font-size:11px;">+ Create</button></div>';return;}
+  el.innerHTML=list.map(p=>`<div class="sidebar-project${p.id===currentProjId?' active':''}" onclick="openProject('${p.id}')"><div class="${STATUS_DOT[p.status]||'sdot-yellow'}"></div><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.title)}</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px;"><span style="font-size:10px;color:${TIER_CLR[p.tier]||'#6366f1'};font-weight:700;">${p.tier}</span><span style="font-size:10px;color:#4a5568;">·</span><span style="font-size:10px;color:#94a3b8;">${esc(p.dept)}</span></div></div></div>`).join('');
+}
+
+function filterProjects(q){renderProjList(q.trim()?allProjects.filter(p=>p.title.toLowerCase().includes(q.toLowerCase())||p.dept.toLowerCase().includes(q.toLowerCase())):allProjects);}
+function handleSearch(q){filterProjects(q);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+<script>
+// ════════════════════════════════════════════
+// OPEN PROJECT
+// ════════════════════════════════════════════
+async function openProject(id){
+  currentProjId=id;
+  const p=allProjects.find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('welcome-state').style.display='none';
+  const panel=document.getElementById('project-panel');panel.style.display='flex';
+  document.getElementById('proj-sdot').className=STATUS_DOT[p.status]||'sdot-yellow';
+  document.getElementById('proj-title').textContent=p.title;
+  document.getElementById('proj-tier').textContent=p.tier;
+  document.getElementById('proj-dept').textContent=p.dept;
+  document.getElementById('proj-sub').textContent=p.desc||'';
+  document.querySelectorAll('.sidebar-project').forEach(el=>{el.classList.toggle('active',el.onclick?.toString().includes(`'${id}'`));});
+  renderProjList(allProjects.filter(x=>true));
+  await switchTab(currentTab);
+}
+function refreshCurrent(){if(currentProjId)openProject(currentProjId);}
+
+// ════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════
+async function switchTab(tab,btnEl=null){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const content=document.getElementById('tab-content');
+  content.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;"><span style="display:inline-block;font-size:26px;animation:spin 1s linear infinite;">⟳</span></div>';
+  const p=allProjects.find(x=>x.id===currentProjId);
+  if(!p)return;
+  switch(tab){
+    case 'overview':    await tabOverview(p);break;
+    case 'checklist':  await tabChecklist(p);break;
+    case 'kb':         await tabKB(p);break;
+    case 'tasks':      await tabTasks(p);break;
+    case 'deployments':await tabDeploy(p);break;
+    case 'revenue':    await tabRevenue(p);break;
+    case 'agent-feed': await tabAgentFeed(p);break;
+  }
+}
+
+// ════════════════════════════════════════════
+// TAB: OVERVIEW
+// ════════════════════════════════════════════
+async function tabOverview(p){
+  const stClr={active:'#10b981',paused:'#f59e0b',inactive:'#ef4444',error:'#ef4444'};
+  const tc=stClr[p.status]||'#f59e0b';
+  const lu=p.updated?new Date(p.updated).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown';
+  const tc2=TIER_CLR[p.tier]||'#6366f1';
+  document.getElementById('tab-content').innerHTML=`
+<div style="max-width:780px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+    <div class="rev-card" style="margin-bottom:0;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Project Details</div>
+      ${ir('Status',`<span style="color:${tc};font-weight:600;">${p.status}</span>`)}
+      ${ir('Priority',`<span style="color:${tc2};font-weight:700;">${p.tier}</span>`)}
+      ${ir('Department',esc(p.dept))}
+      ${ir('Assigned Agent','🤖 '+esc(p.agent))}
+      ${ir('Revenue Stage',esc(p.revStage))}
+      ${ir('Last Updated',lu)}
+    </div>
+    <div class="rev-card" style="margin-bottom:0;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Links & Resources</div>
+      ${ir('Live URL',p.liveUrl?`<a href="${p.liveUrl}" target="_blank" style="color:#6366f1;text-decoration:none;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;display:inline-block;white-space:nowrap;">${p.liveUrl}</a>`:'<span style="color:#4a5568;">Not set</span>')}
+      ${ir('GitHub',p.repo?`<a href="https://github.com/${p.repo}" target="_blank" style="color:#6366f1;text-decoration:none;font-size:11px;">${p.repo}</a>`:'<span style="color:#4a5568;">Not set</span>')}
+      ${ir('Data Source',esc(p.source||'manual'))}
+    </div>
+  </div>
+  <div class="rev-card">
+    <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Description</div>
+    <p style="font-size:13px;color:#cbd5e1;line-height:1.65;">${esc(p.desc)||'<em style="color:#4a5568;">No description set.</em>'}</p>
+  </div>
+  <div class="rev-card" style="margin-top:14px;">
+    <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Quick Actions</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="switchTab('tasks',null)" class="btn-p" style="font-size:11px;">🗂 Tasks</button>
+      <button onclick="switchTab('checklist',null)" class="btn-g" style="font-size:11px;">✅ Checklist</button>
+      <button onclick="switchTab('kb',null)" class="btn-g" style="font-size:11px;">📚 KB Docs</button>
+      <button onclick="switchTab('agent-feed',null)" class="btn-g" style="font-size:11px;">🤖 Agent Feed</button>
+      ${p.liveUrl?`<button onclick="window.open('${p.liveUrl}','_blank')" class="btn-g" style="font-size:11px;">🔗 Live Site</button>`:''}
+      ${p.repo?`<button onclick="window.open('https://github.com/${p.repo}','_blank')" class="btn-g" style="font-size:11px;">📦 GitHub</button>`:''}
+    </div>
+  </div>
+</div>`;
+}
+function ir(label,val){return`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid #1a1d2e;"><span style="color:#94a3b8;">${label}</span><span style="color:#f1f5f9;">${val}</span></div>`;}
+
+// ════════════════════════════════════════════
+// TAB: CHECKLIST
+// ════════════════════════════════════════════
+const CHECKLIST=[
+  {id:'c1',cat:'Discovery',text:'Define project scope and objectives'},
+  {id:'c2',cat:'Discovery',text:'Identify stakeholders and AI agents'},
+  {id:'c3',cat:'Discovery',text:'Map dependencies and blockers'},
+  {id:'c4',cat:'Setup',text:'Create GitHub repository'},
+  {id:'c5',cat:'Setup',text:'Configure Supabase tables and RLS'},
+  {id:'c6',cat:'Setup',text:'Set up GHL pipeline and automations'},
+  {id:'c7',cat:'Build',text:'Build core MVP feature set'},
+  {id:'c8',cat:'Build',text:'Write SOP documentation in KB'},
+  {id:'c9',cat:'Build',text:'Configure AI agent workflows'},
+  {id:'c10',cat:'Launch',text:'Deploy to production (Vercel)'},
+  {id:'c11',cat:'Launch',text:'Create marketing landing page'},
+  {id:'c12',cat:'Launch',text:'Activate email sequence in GHL'},
+  {id:'c13',cat:'Revenue',text:'First sale completed 🎉'},
+  {id:'c14',cat:'Revenue',text:'Monthly recurring revenue active'},
+  {id:'c15',cat:'Revenue',text:'Daily revenue target hit ($33,333/day)'},
+];
+
+async function tabChecklist(p){
+  const lk='cl_'+p.id;
+  try{const sv=localStorage.getItem(lk);if(sv)Object.assign(checkState,JSON.parse(sv));}catch(e){}
+  const sb_data=await sb('GET','project_checklist',`project_id=eq.${p.id}&user_id=eq.${UID}`);
+  if(sb_data?.length)sb_data.forEach(d=>{checkState[p.id+'_'+d.item_id]=d.checked;});
+  renderChecklistUI(p);
+}
+
+function renderChecklistUI(p){
+  const cats=[...new Set(CHECKLIST.map(i=>i.cat))];
+  const tot=CHECKLIST.length, done=CHECKLIST.filter(i=>checkState[p.id+'_'+i.id]).length;
+  const pct=Math.round(done/tot*100);
+  let html=`<div style="max-width:660px;"><div style="margin-bottom:18px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:12px;color:#94a3b8;">Progress</span><span style="font-size:12px;font-weight:700;color:${pct===100?'#10b981':'#f1f5f9'};">${done}/${tot} — ${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div></div>`;
+  cats.forEach(cat=>{
+    const items=CHECKLIST.filter(i=>i.cat===cat), cd=items.filter(i=>checkState[p.id+'_'+i.id]).length;
+    html+=`<div style="margin-bottom:14px;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6366f1;">${cat}</span><span style="font-size:10px;color:#94a3b8;">${cd}/${items.length}</span></div><div style="background:#1e2130;border-radius:8px;padding:6px 14px;">`;
+    items.forEach(item=>{
+      const chk=!!checkState[p.id+'_'+item.id];
+      html+=`<div class="checklist-item"><input type="checkbox" style="width:16px;height:16px;accent-color:#6366f1;cursor:pointer;" ${chk?'checked':''} onchange="toggleCL('${p.id}','${item.id}',this.checked)"><span style="font-size:13px;${chk?'text-decoration:line-through;color:#94a3b8;':'color:#f1f5f9;'}">${item.text}</span></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('tab-content').innerHTML=html;
+}
+
+async function toggleCL(pid,iid,checked){
+  checkState[pid+'_'+iid]=checked;
+  try{const lk='cl_'+pid,ex=JSON.parse(localStorage.getItem(lk)||'{}');ex[pid+'_'+iid]=checked;localStorage.setItem(lk,JSON.stringify(ex));}catch(e){}
+  const body={project_id:pid,item_id:iid,checked,user_id:UID,updated_at:new Date().toISOString()};
+  const ex=await sb('GET','project_checklist',`project_id=eq.${pid}&item_id=eq.${iid}`);
+  if(ex?.length)await sb('PATCH','project_checklist?project_id=eq.'+pid+'&item_id=eq.'+iid,'',{checked},true);
+  else await sb('POST','project_checklist','',body,true);
+  const fill=document.querySelector('.progress-fill');
+  if(fill){const tot=CHECKLIST.length,done=CHECKLIST.filter(i=>checkState[pid+'_'+i.id]).length;const pct=Math.round(done/tot*100);fill.style.width=pct+'%';}
+  if(checked)toast('Item complete! 🎉','success');
+}
+</script>
+<script>
+// ════════════════════════════════════════════
+// TAB: KNOWLEDGE BASE
+// ════════════════════════════════════════════
+async function tabKB(p){
+  let items=await sb('GET','knowledge_items','select=id,title,content,metadata,source,created_at&order=created_at.desc&limit=50');
+  if(items?.length){
+    const rel=items.filter(i=>{const m=i.metadata||{};return m.project_id===p.id||i.title?.toLowerCase().includes(p.title.toLowerCase().split(' ')[0]);});
+    if(rel.length>0)items=rel;
+  }
+  if(!items?.length)items=demoKB(p);
+  document.getElementById('tab-content').innerHTML=`
+<div style="max-width:760px;">
+  <div style="display:flex;gap:9px;margin-bottom:14px;align-items:center;">
+    <input type="text" id="kb-search" placeholder="🔍 Search knowledge base…" style="flex:1;font-size:12px;" oninput="kbFilter(this.value)">
+    <button onclick="addKBItem('${p.id}')" class="btn-p" style="font-size:11px;white-space:nowrap;">+ Add Doc</button>
+  </div>
+  <div id="kb-list">${items.map(kbCard).join('')}</div>
+</div>`;
+}
+
+function kbCard(item){
+  const id='kbi_'+item.id.toString().replace(/[^a-z0-9]/gi,'_');
+  const ic={'notion':'📝','github':'📦','genspark':'⚡','clickup':'📋','vercel':'🚀','ghl':'📧','supabase':'🗄️','enterprise_org':'🏢','mega_course':'🎓','project_registry':'📁','manual':'📄'}[item.source]||'📄';
+  const d=item.created_at?new Date(item.created_at).toLocaleDateString():'';
+  return`<div class="kb-item"><div class="kb-header" onclick="toggleKB('${id}')"><div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0;"><span style="font-size:15px;flex-shrink:0;">${ic}</span><div><div style="font-size:12px;font-weight:500;color:#f1f5f9;">${esc(item.title||'Untitled')}</div><div style="display:flex;gap:6px;margin-top:2px;"><span style="font-size:10px;background:#2d3748;color:#94a3b8;padding:1px 5px;border-radius:3px;">${item.source||'manual'}</span>${d?`<span style="font-size:10px;color:#94a3b8;">${d}</span>`:''}</div></div></div><span id="${id}_arr" style="color:#94a3b8;font-size:12px;flex-shrink:0;">▶</span></div><div class="kb-body" id="${id}_body">${item.content?esc(item.content.substring(0,3000))+(item.content.length>3000?'\n…':''):'<em>No content</em>'}</div></div>`;
+}
+function toggleKB(id){const b=document.getElementById(id+'_body'),a=document.getElementById(id+'_arr');if(!b)return;const o=b.classList.toggle('open');if(a)a.textContent=o?'▼':'▶';}
+function kbFilter(q){document.querySelectorAll('#kb-list .kb-item').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+
+function demoKB(p){return[
+  {id:'dk1',title:p.title+' — SOP Overview',content:'Standard Operating Procedure\n\n1. Daily standup at 9am\n2. Review AI agent outputs in Hub\n3. Update task board\n4. Check deployment status\n5. Review revenue metrics\n6. Log blockers to CoS',source:'notion',metadata:{},created_at:new Date().toISOString()},
+  {id:'dk2',title:p.title+' — PRD',content:'Product Requirements\n\nObjective: '+p.desc+'\n\nFeatures:\n- Core MVP\n- AI agent integration\n- Analytics & reporting\n\nSuccess metrics:\n- Daily active users\n- Revenue $33,333/day',source:'notion',metadata:{},created_at:new Date(Date.now()-86400000).toISOString()},
+  {id:'dk3',title:'Agent Workflow — '+p.agent,content:'AI Agent Responsibilities:\n1. Monitor task board hourly\n2. Execute builds and deployments\n3. Report blockers to CoS\n4. Update KB documentation\n5. Sync with GHL automations',source:'enterprise_org',metadata:{},created_at:new Date(Date.now()-172800000).toISOString()},
+];}
+
+async function addKBItem(pid){
+  const title=prompt('Document title:');if(!title)return;
+  const content=prompt('Content (optional):');
+  const r=await sb('POST','knowledge_items','',{title,content:content||'',source:'manual',user_id:UID,metadata:{project_id:pid},created_at:new Date().toISOString()},true);
+  toast('Document saved to KB!','success');
+  await tabKB(allProjects.find(p=>p.id===pid));
+}
+
+// ════════════════════════════════════════════
+// TAB: TASKS (KANBAN)
+// ════════════════════════════════════════════
+let tasksStore={};
+const COLS={todo:{label:'To Do',color:'#94a3b8',icon:'📋'},inprogress:{label:'In Progress',color:'#f59e0b',icon:'⚡'},done:{label:'Done',color:'#10b981',icon:'✅'}};
+
+async function tabTasks(p){
+  let raw=await sb('GET','project_tasks',`project_id=eq.${p.id}&order=created_at.desc&limit=100`);
+  if(!raw?.length)raw=demoTasks(p);
+  tasksStore[p.id]={todo:[],inprogress:[],done:[]};
+  raw.forEach(t=>{
+    const col=t.status==='done'?'done':(t.status==='inprogress'||t.status==='in_progress'?'inprogress':'todo');
+    tasksStore[p.id][col].push(t);
+  });
+  renderKanban(p);
+}
+
+function renderKanban(p){
+  let html=`<div style="display:flex;gap:14px;height:calc(100vh - 295px);overflow-x:auto;padding-bottom:6px;">`;
+  Object.entries(COLS).forEach(([cid,col])=>{
+    const cards=tasksStore[p.id]?.[cid]||[];
+    html+=`<div class="kanban-col" id="kcol_${cid}" ondragover="kdragOver(event)" ondrop="kdrop(event,'${cid}','${p.id}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:5px;"><span>${col.icon}</span><span style="font-size:12px;font-weight:600;color:${col.color};">${col.label}</span><span style="font-size:10px;background:#2d3748;color:#94a3b8;padding:1px 6px;border-radius:9px;">${cards.length}</span></div>
+        <button onclick="addTask('${p.id}','${cid}')" style="background:none;color:#94a3b8;font-size:18px;line-height:1;padding:0 3px;">+</button>
+      </div>
+      <div id="kcards_${cid}" style="overflow-y:auto;max-height:calc(100% - 44px);padding-right:2px;">${cards.map(kCard).join('')}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('tab-content').innerHTML=html;
+}
+
+function kCard(t){
+  const pc={high:'#ef4444',medium:'#f59e0b',low:'#10b981',P0:'#ef4444',P1:'#f59e0b',P2:'#6366f1'}[t.priority||'medium']||'#94a3b8';
+  const due=t.due_date?new Date(t.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+  const ovr=t.due_date&&new Date(t.due_date)<new Date()&&t.status!=='done';
+  return`<div class="kanban-card" draggable="true" data-tid="${t.id}" ondragstart="kdragStart(event,'${t.id}')" ondragend="kdragEnd(event)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:7px;margin-bottom:7px;">
+      <span style="font-size:12px;font-weight:500;color:#f1f5f9;line-height:1.4;">${esc(t.title||'Untitled')}</span>
+      <span style="width:7px;height:7px;border-radius:50%;background:${pc};flex-shrink:0;margin-top:4px;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      ${t.assignee?`<span style="font-size:10px;background:#2d3748;color:#94a3b8;padding:2px 6px;border-radius:4px;">🤖 ${esc(t.assignee)}</span>`:''}
+      ${due?`<span style="font-size:10px;color:${ovr?'#ef4444':'#94a3b8'};">${ovr?'⚠️ ':'📅 '}${due}</span>`:''}
+      ${t.clickup_id?`<span style="font-size:9px;color:#6366f1;">CU-${t.clickup_id}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function demoTasks(p){return[
+  {id:'dt1',title:'Set up core infrastructure',status:'done',priority:'P0',assignee:'Tech Agent',project_id:p.id},
+  {id:'dt2',title:'Configure Supabase schema & RLS',status:'done',priority:'P1',assignee:'Tech Agent',project_id:p.id},
+  {id:'dt3',title:'Build dashboard UI components',status:'inprogress',priority:'P0',assignee:'Tech Agent',due_date:new Date(Date.now()+86400000).toISOString(),project_id:p.id},
+  {id:'dt4',title:'Write SOPs for all workflows',status:'inprogress',priority:'P1',assignee:'CoS',due_date:new Date(Date.now()+3*86400000).toISOString(),project_id:p.id},
+  {id:'dt5',title:'Create GHL email sequence',status:'todo',priority:'P1',assignee:'Marketing Agent',due_date:new Date(Date.now()+5*86400000).toISOString(),project_id:p.id},
+  {id:'dt6',title:'Launch to first 100 users',status:'todo',priority:'P0',assignee:'CoS',due_date:new Date(Date.now()+7*86400000).toISOString(),project_id:p.id},
+  {id:'dt7',title:'Set up Vercel deployment pipeline',status:'done',priority:'P0',assignee:'Tech Agent',project_id:p.id},
+];}
+
+function kdragStart(e,tid){draggedId=tid;setTimeout(()=>e.target.classList.add('dragging'),0);}
+function kdragEnd(e){e.target.classList.remove('dragging');}
+function kdragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drag-over');}
+
+function kdrop(e,colId,pid){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  document.querySelectorAll('.kanban-col').forEach(el=>el.classList.remove('drag-over'));
+  if(!draggedId||!currentProjId)return;
+  const store=tasksStore[pid];if(!store)return;
+  let moved=null;
+  ['todo','inprogress','done'].forEach(c=>{const i=store[c].findIndex(t=>t.id==draggedId);if(i!==-1){moved=store[c].splice(i,1)[0];}});
+  if(moved){moved.status=colId;store[colId].push(moved);sb('PATCH','project_tasks?id=eq.'+moved.id,'',{status:colId},true);renderKanban(allProjects.find(x=>x.id===pid));}
+  draggedId=null;
+}
+
+async function addTask(pid,col){
+  const title=prompt('Task title:');if(!title)return;
+  const t={id:'t'+Date.now(),title,status:col,priority:'P1',assignee:'CoS',project_id:pid,due_date:null};
+  if(!tasksStore[pid])tasksStore[pid]={todo:[],inprogress:[],done:[]};
+  tasksStore[pid][col].push(t);
+  await sb('POST','project_tasks','',{...t,user_id:UID},true);
+  renderKanban(allProjects.find(p=>p.id===pid));
+  toast('Task added!','success');
+}
+</script>
+<script>
+// ════════════════════════════════════════════
+// TAB: DEPLOYMENTS
+// ════════════════════════════════════════════
+async function tabDeploy(p){
+  let deploys=await sb('GET','project_deployments',`project_id=eq.${p.id}&order=created_at.desc&limit=10`)||[];
+  const gh=p.repo?`https://github.com/${p.repo}`:'';
+  document.getElementById('tab-content').innerHTML=`
+<div style="max-width:680px;">
+  <div class="deploy-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+      <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;"><span>📦</span>GitHub Repository</div>
+      ${gh?`<a href="${gh}" target="_blank" style="color:#6366f1;font-size:11px;text-decoration:none;">Open →</a>`:''}
+    </div>
+    ${gh?`<div style="background:#0f1117;border-radius:6px;padding:9px;font-size:11px;font-family:monospace;color:#94a3b8;margin-bottom:9px;">${p.repo}</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+      <button onclick="window.open('${gh}/issues','_blank')" class="btn-g" style="font-size:10px;">Issues</button>
+      <button onclick="window.open('${gh}/pulls','_blank')" class="btn-g" style="font-size:10px;">Pull Requests</button>
+      <button onclick="window.open('${gh}/actions','_blank')" class="btn-g" style="font-size:10px;">CI / Actions</button>
+      <button onclick="window.open('${gh}/commits','_blank')" class="btn-g" style="font-size:10px;">Commits</button>
+    </div>`:`<p style="color:#94a3b8;font-size:12px;">No GitHub repo configured.</p>`}
+  </div>
+  <div class="deploy-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+      <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;"><span>▲</span>Vercel</div>
+      ${p.liveUrl?`<a href="${p.liveUrl}" target="_blank" style="color:#10b981;font-size:11px;text-decoration:none;">View Live →</a>`:''}
+    </div>
+    ${p.liveUrl?`<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 5px #10b98166;"></span><span style="font-size:12px;color:#10b981;font-weight:600;">Live</span><span style="font-size:11px;color:#94a3b8;margin-left:6px;">${p.liveUrl}</span></div>
+    <div style="background:#0f1117;border-radius:6px;padding:9px;font-size:10px;font-family:monospace;color:#94a3b8;">Last deploy: ${new Date(p.updated||Date.now()).toLocaleString()}<br>Status: Ready ✓</div>`:`<p style="color:#94a3b8;font-size:12px;">No live URL configured.</p>`}
+  </div>
+  <div class="deploy-card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:11px;display:flex;align-items:center;gap:7px;"><span>📋</span>Deploy History</div>
+    ${deploys.length?deploys.map(d=>`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #2d3748;font-size:11px;"><span style="width:6px;height:6px;border-radius:50%;background:${d.status==='success'?'#10b981':'#ef4444'};flex-shrink:0;"></span><span style="flex:1;color:#f1f5f9;">${esc(d.commit_message||'Deploy')}</span><span style="color:#94a3b8;">${d.created_at?new Date(d.created_at).toLocaleDateString():''}</span></div>`).join(''):`
+    <div style="color:#94a3b8;font-size:12px;margin-bottom:10px;">No history yet. Connect your repo to start deploying.</div>
+    <div style="background:#0f1117;border-radius:6px;padding:11px;font-size:10px;font-family:monospace;color:#818cf8;line-height:1.8;">
+      git init && git remote add origin ${gh||'https://github.com/rtmendes/your-repo'}.git<br>
+      git add . && git commit -m "Initial commit"<br>
+      git push -u origin main<br>
+      # Vercel auto-deploys on push
+    </div>`}
+  </div>
+</div>`;
+}
+
+// ════════════════════════════════════════════
+// TAB: REVENUE
+// ════════════════════════════════════════════
+async function tabRevenue(p){
+  const r_arr=await sb('GET','project_revenue',`project_id=eq.${p.id}&limit=1`)||[];
+  const r=r_arr[0]||{};
+  const monthly=parseFloat(r.monthly_revenue||0);
+  const daily=parseFloat(r.daily_revenue||monthly/30||0);
+  const target=33333;
+  const dailyPct=Math.min(Math.round(daily/target*100),100);
+  document.getElementById('tab-content').innerHTML=`
+<div style="max-width:680px;">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:16px;">
+    <div style="background:#1e2130;border-radius:8px;padding:14px;border-left:3px solid #10b981;">
+      <div style="font-size:10px;color:#94a3b8;margin-bottom:5px;">Monthly Rev</div>
+      <div style="font-size:20px;font-weight:700;color:#10b981;">${fmtUSD(monthly)}</div>
+    </div>
+    <div style="background:#1e2130;border-radius:8px;padding:14px;border-left:3px solid #6366f1;">
+      <div style="font-size:10px;color:#94a3b8;margin-bottom:5px;">Daily Target</div>
+      <div style="font-size:20px;font-weight:700;color:#6366f1;">$33,333</div>
+    </div>
+    <div style="background:#1e2130;border-radius:8px;padding:14px;border-left:3px solid #f59e0b;">
+      <div style="font-size:10px;color:#94a3b8;margin-bottom:5px;">Stage</div>
+      <div style="font-size:15px;font-weight:700;color:#f59e0b;">${esc(p.revStage)}</div>
+    </div>
+  </div>
+  <div class="rev-card">
+    <div style="margin-bottom:6px;display:flex;justify-content:space-between;"><span style="font-size:11px;color:#94a3b8;">Daily revenue progress</span><span style="font-size:11px;font-weight:600;color:${daily>=target?'#10b981':'#f59e0b'};">${dailyPct}%</span></div>
+    <div class="progress-bar" style="margin-bottom:14px;"><div class="progress-fill" style="width:${dailyPct}%;${daily>=target?'background:linear-gradient(90deg,#10b981,#34d399);':''}"></div></div>
+    ${ir('Product Live?',r.product_live?'<span style="color:#10b981;">✅ Yes</span>':'<span style="color:#94a3b8;">⏳ Not yet</span>')}
+    ${ir('GHL Pipeline?',r.ghl_active?'<span style="color:#10b981;">✅ Active</span>':'<span style="color:#94a3b8;">⏳ Not configured</span>')}
+    ${ir('Email Sequence?',r.email_sequence_live?'<span style="color:#10b981;">✅ Running</span>':'<span style="color:#94a3b8;">⏳ Not active</span>')}
+    ${ir('First Sale',r.first_sale_date?'<span style="color:#10b981;">'+new Date(r.first_sale_date).toLocaleDateString()+'</span>':'<span style="color:#94a3b8;">—</span>')}
+    ${ir('Customers',String(r.total_customers||0))}
+    ${ir('Avg Order',r.avg_order_value?fmtUSD(r.avg_order_value):'—')}
+  </div>
+  <div class="rev-card">
+    <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:11px;">Revenue Milestones</div>
+    ${milestone('First dollar earned',r.first_sale_date,'#10b981')}
+    ${milestone('$1K/month',r.milestone_1k,'#6366f1')}
+    ${milestone('$10K/month',r.milestone_10k,'#f59e0b')}
+    ${milestone('$33.3K/day — TARGET',r.milestone_daily_target,'#ef4444')}
+  </div>
+</div>`;
+}
+
+function fmtUSD(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0}).format(n);}
+function milestone(label,achieved,color){return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #1a1d2e;font-size:12px;"><span style="width:18px;height:18px;border-radius:50%;background:${achieved?color:'#2d3748'};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">${achieved?'✓':'○'}</span><span style="color:${achieved?'#f1f5f9':'#94a3b8'};">${label}</span>${achieved?`<span style="margin-left:auto;font-size:10px;color:${color};">${new Date(achieved).toLocaleDateString()}</span>`:''}</div>`;}
+</script>
+<script>
+// ════════════════════════════════════════════
+// TAB: AI AGENT FEED
+// ════════════════════════════════════════════
+async function tabAgentFeed(p){
+  let items=await sb('GET','cos_briefings','order=created_at.desc&limit=30')||[];
+  if(!items.length)items=demoBriefings(p);
+  const rel=items.filter(b=>{const m=b.metadata||{};return!m.project_id||m.project_id===p.id||b.content?.toLowerCase().includes(p.title.toLowerCase().split(' ')[0]);});
+  const show=(rel.length>0?rel:items).slice(0,15);
+  document.getElementById('tab-content').innerHTML=`
+<div style="max-width:700px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <span style="font-size:13px;font-weight:600;">Agent Activity Feed</span>
+    <button onclick="tabAgentFeed(allProjects.find(p=>p.id===currentProjId))" class="btn-g" style="font-size:11px;">↻ Refresh</button>
+  </div>
+  ${show.map(briefCard).join('')}
+  ${!show.length?'<div style="text-align:center;padding:40px;color:#94a3b8;font-size:12px;">No agent activity yet for this project.</div>':''}
+</div>`;
+}
+
+function briefCard(b){
+  const m=b.metadata||{};
+  const agent=b.agent_name||m.agent||m.source||'AI Agent';
+  const action=b.summary||b.content?.substring(0,180)||'No details';
+  const t=b.created_at?timeAgo(new Date(b.created_at)):'';
+  const isBlk=b.type==='blocker'||b.is_blocker||action.toLowerCase().includes('block');
+  const ac={'Tech Agent':'#6366f1','Marketing Agent':'#f59e0b','CoS':'#10b981','AI Agent':'#818cf8'}[agent]||'#6366f1';
+  return`<div class="agent-item" style="border-left-color:${isBlk?'#ef4444':ac};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <span style="font-size:11px;font-weight:700;color:${ac};">🤖 ${esc(agent)}</span>
+        ${isBlk?`<span style="font-size:9px;background:#ef444422;color:#ef4444;padding:1px 5px;border-radius:3px;font-weight:700;">BLOCKER</span>`:''}
+      </div>
+      <span style="font-size:10px;color:#94a3b8;">${t}</span>
+    </div>
+    <p style="font-size:11px;color:#cbd5e1;line-height:1.55;margin:0;">${esc(action)}</p>
+  </div>`;
+}
+
+function demoBriefings(p){const now=Date.now();return[
+  {id:'db1',agent_name:'Tech Agent',summary:'Completed infrastructure setup for '+p.title+'. All services nominal. Vercel deploy successful.',created_at:new Date(now-1800000).toISOString()},
+  {id:'db2',agent_name:'CoS',summary:'Daily briefing: 3 tasks completed, 2 in progress. Revenue at 0% — need marketing push. Checklist 27% complete.',created_at:new Date(now-3600000).toISOString()},
+  {id:'db3',agent_name:'Marketing Agent',summary:'Email sequence draft ready for review. 5 templates created in GHL. Open rate benchmark: 35%.',created_at:new Date(now-7200000).toISOString()},
+  {id:'db4',agent_name:'Tech Agent',summary:'BLOCKER: Supabase RLS policies need configuration for project_tasks table. Writes failing with 403.',type:'blocker',is_blocker:true,created_at:new Date(now-10800000).toISOString()},
+  {id:'db5',agent_name:'CoS',summary:'Weekly summary: Hub deployed. 4/15 checklist items done. Next priority: first sale. Daily target: $33,333.',created_at:new Date(now-86400000).toISOString()},
+];}
+
+function timeAgo(d){const s=Math.floor((new Date()-d)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+
+// ════════════════════════════════════════════
+// COMMENT BOX
+// ════════════════════════════════════════════
+function cmtKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitComment();}}
+
+async function submitComment(){
+  const inp=document.getElementById('comment-input');
+  const route=document.getElementById('comment-route')?.value;
+  const txt=inp?.value?.trim();
+  if(!txt){toast('Please enter a comment','warning');return;}
+  if(!currentProjId){toast('Select a project first','warning');return;}
+  const cmt={project_id:currentProjId,user_id:UID,content:txt,route_to:route,tab_context:currentTab,created_at:new Date().toISOString()};
+  await sb('POST','project_comments','',cmt,true);
+  if(route==='kb_entry'){
+    await sb('POST','knowledge_items','',{title:txt.substring(0,60)+(txt.length>60?'…':''),content:txt,source:'manual',user_id:UID,metadata:{project_id:currentProjId,from:'comment'},created_at:new Date().toISOString()},true);
+    toast('Saved as KB entry!','success');
+  }else if(route==='clickup_task'){toast('ClickUp task queued (add API key in config)','info');}
+  else if(route==='tech_agent'){toast('Routed to Tech Agent ✓','success');}
+  else if(route==='marketing_agent'){toast('Routed to Marketing Agent ✓','success');}
+  else if(route==='ghl_action'){toast('GHL action queued (configure API key)','info');}
+  else{toast('Comment saved to CoS ✓','success');}
+  if(inp){inp.value='';document.getElementById('cmt-count').textContent='0/500';}
+}
+
+// ════════════════════════════════════════════
+// TOP BAR: TICKER, AGENTS, NOTIFICATIONS
+// ════════════════════════════════════════════
+async function tickerUpdate(){
+  const data=await sb('GET','project_revenue','select=daily_revenue,monthly_revenue&order=monthly_revenue.desc&limit=20');
+  let total=0;if(data)data.forEach(d=>total+=parseFloat(d.daily_revenue||d.monthly_revenue/30||0));
+  const el=document.getElementById('daily-rev');
+  if(el){el.textContent=fmtUSD(Math.round(total));el.style.color=total>=33333?'#10b981':total>0?'#f59e0b':'#94a3b8';}
+}
+
+async function agentUpdate(){
+  const data=await sb('GET','cos_briefings','select=agent_name&order=created_at.desc&limit=20');
+  const el=document.getElementById('agent-status');if(!el)return;
+  if(data?.length){const agents=new Set(data.map(d=>d.agent_name).filter(Boolean));el.textContent=`${Math.min(agents.size,5)} agents active`;}
+  else{el.textContent='3 agents active';}
+}
+
+async function notifUpdate(){
+  const data=await sb('GET','cos_briefings','is_blocker=eq.true&order=created_at.desc&limit=10');
+  if(data?.length){const b=document.getElementById('notif-badge');if(b){b.style.display='flex';b.textContent=data.length;}}
+}
+
+function toggleNotif(){
+  const p=document.getElementById('notif-panel');
+  const open=p.style.transform==='translateX(0px)'||p.style.transform==='translateX(0)';
+  p.style.transform=open?'translateX(100%)':'translateX(0)';
+  if(!open)loadNotifs();
+}
+
+async function loadNotifs(){
+  const list=document.getElementById('notif-list');if(!list)return;
+  const data=await sb('GET','cos_briefings','order=created_at.desc&limit=15')||demoBriefings(allProjects[0]||{});
+  list.innerHTML=data.map(b=>`<div style="padding:9px;border-bottom:1px solid #2d3748;cursor:pointer;" onclick="toggleNotif()"><div style="font-size:11px;font-weight:600;color:#f1f5f9;margin-bottom:3px;">${esc(b.agent_name||'Agent')}</div><div style="font-size:10px;color:#94a3b8;line-height:1.4;">${esc((b.summary||b.content||'').substring(0,100))}</div><div style="font-size:9px;color:#6366f1;margin-top:3px;">${b.created_at?timeAgo(new Date(b.created_at)):''}</div></div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════
+function showNewProject(){document.getElementById('modal-new').style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+async function createProject(){
+  const name=document.getElementById('np-name')?.value?.trim();
+  if(!name){toast('Project name required','warning');return;}
+  const dept=document.getElementById('np-dept')?.value;
+  const tier=document.getElementById('np-tier')?.value;
+  const desc=document.getElementById('np-desc')?.value||'';
+  const obj={title:name,content:desc,source:'project_registry',user_id:UID,metadata:{department:dept,tier,status:'active',description:desc},created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+  const res=await sb('POST','knowledge_items','',obj,true);
+  const created=res?.[0]||{...obj,id:'local_'+Date.now()};
+  allProjects.push(normProject(created));
+  renderProjList(allProjects);
+  closeModal('modal-new');
+  toast(`Project "${name}" created!`,'success');
+  openProject(created.id);
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  loadProjects();
+  setInterval(agentUpdate,60000);
+  setInterval(tickerUpdate,90000);
+});
+if(document.readyState!=='loading')loadProjects();
+</script>
+</body>
+</html>
